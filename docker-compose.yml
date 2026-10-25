@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  fastapi_app:
+    build: .
+    container_name: ecoroute_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: uvicorn app.api:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - ecoroute-net
+
+  streamlit_app:
+    build: .
+    container_name: ecoroute_frontend
+    ports:
+      - "8501:8501"
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: streamlit run app/dashboard.py --server.port=8501 --server.address=0.0.0.0
+    depends_on:
+      - fastapi_app
+    networks:
+      - ecoroute-net
+
+networks:
+  ecoroute-net:
+    driver: bridge
