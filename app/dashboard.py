@@ -1,9 +1,9 @@
-import streamlit as st
-import requests
+import os
 import pandas as pd
+import requests
+import streamlit as st
 import folium
 from streamlit_folium import st_folium
-import os  
 
 st.set_page_config(page_title="EcoRoute-ML Portal", page_icon="⚡", layout="wide")
 
