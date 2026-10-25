@@ -4,12 +4,21 @@ import sqlite3
 import pandas as pd
 import requests
 from fastapi import FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 app = FastAPI(
     title="EcoRoute-ML API with User Profiles",
     description="EV Energy Degradation & Telemetry Prediction Service",
     version="2.0.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 MODEL_DIR = os.path.join(os.path.dirname(__file__), "..", "models")
@@ -104,7 +113,6 @@ def log_prediction_sqlite(trip: TripRequest, loss_rate: float, total_loss: float
 def predict_trip_energy(trip: TripRequest):
     weather = fetch_open_meteo_weather(trip.start_lat, trip.start_lon)
     
-    # Feature matrix matching JAC telemetry model expectations
     features = pd.DataFrame([{
         "speed_kmh": trip.speed_kmh,
         "elevation_gain_m": trip.elevation_gain_m,
@@ -117,12 +125,11 @@ def predict_trip_energy(trip: TripRequest):
     if xgboost_model is not None:
         soc_loss_per_km = float(xgboost_model.predict(features)[0])
     else:
-        soc_loss_per_km = 0.22 # Fallback baseline rate
+        soc_loss_per_km = 0.22
         
-    estimated_total_soc_loss = soc_loss_per_km * 15.0 # Assuming 15km route leg
+    estimated_total_soc_loss = soc_loss_per_km * 15.0
     final_soc = max(0.0, trip.starting_soc - estimated_total_soc_loss)
     
-    # Anomaly Detection for Single-Row Inference
     if scaler is not None:
         cluster_features = pd.DataFrame([{
             "speed_kmh": trip.speed_kmh,
@@ -155,7 +162,7 @@ def predict_trip_energy(trip: TripRequest):
 def get_history(username: str):
     try:
         conn = sqlite3.connect(DB_PATH)
-        df = pd.read_sql_query(f"SELECT * FROM user_trip_logs WHERE username = '{username}' ORDER BY id DESC", conn)
+        df = pd.read_sql_query("SELECT * FROM user_trip_logs WHERE username = ? ORDER BY id DESC", conn, params=(username,))
         conn.close()
         return df.to_dict(orient="records")
     except Exception:
