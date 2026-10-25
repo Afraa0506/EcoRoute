@@ -16,7 +16,7 @@ st.set_page_config(
 # 1. Tries to look for an environment variable named BACKEND_URL
 # 2. Falls back to your Render backend web service URL if not locally defined
 API_URL = os.environ.get(
-    "BACKEND_URL", "https://ecoroute-backend.onrender.com"
+    "BACKEND_URL", "https://ecoroute-backend-qd4s.onrender.com"
 )
 
 if "authenticated" not in st.session_state:
