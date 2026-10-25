@@ -3,9 +3,11 @@ import requests
 import pandas as pd
 import folium
 from streamlit_folium import st_folium
+import os  
 
 st.set_page_config(page_title="EcoRoute-ML Portal", page_icon="⚡", layout="wide")
-API_URL = "http://fastapi_app:8000"
+
+API_URL = os.environ.get("BACKEND_URL", "http://fastapi_app:8000")
 
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
@@ -45,7 +47,6 @@ with st.sidebar:
         ["JAC IEV40 (40kWh)", "Tesla Model 3 (75kWh)", "Tata Nexon EV (30kWh)", "Hyundai Ioniq 5 (58kWh)"]
     )
     
-    # Auto-assign specs based on selection
     if "JAC" in car_model:
         default_weight, default_batt = 1400.0, 40.0
     elif "Tesla" in car_model:
@@ -101,7 +102,6 @@ if predict_btn:
         except Exception as e:
             st.error(f"Could not connect to FastAPI: {e}")
 
-# Display Persistent Results
 if st.session_state.prediction_data:
     data = st.session_state.prediction_data
     
